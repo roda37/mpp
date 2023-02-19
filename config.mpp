@@ -1,0 +1,7 @@
+# This line defines what player will be used. You can use whatever you'd like since this program relies on an external media output. For example use mpv.
+
+PLAYER-USE=ffplay -nodisp
+
+# Use either getch or standard input method in python. Getch is recommended by default.
+
+GREP-METHOD=getch
