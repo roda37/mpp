@@ -1,72 +1,53 @@
 #!/usr/bin/env python3
-from os import listdir,system,path
+from os import listdir,system,path,getpid
 from getch import getch
-from threading import Thread
-from playsound import playsound
-from multiprocessing import Process, Event
 from time import sleep
+from multiprocessing import Process
 
-# Config file provided by user
-while True:
-    try:
-        config_file=open('config.mpp').readlines()
-        break
-    except FileNotFoundError:
-        config=(
-'''# This line defines what player will be used. You can use whatever you'd like since this program relies on an external media output. For example use mpv.
+# MUSIC PLAYER TO PLAY AUDIO
+music_media_player = "ffplay -nodisp"
 
-PLAYER-USE=mpv
+# Prevents a slider from going backwards when scrolling
+global a
+a = 0
+counter = 1
 
-# Use either getch or standard input method in python. Getch is recommended by default.
+# VISUAL INDICATOR FOR AUTOPLAY FEATURE
+autoplay = 'off'
+# TOGGLE AUTOPLAY
+auto = 0
 
-GREP-METHOD=getch
-''')
-        open('config.mpp','w').write(config)
-# THIS DEFINES THE USER GIVEN PREFERENCES IN config.mpp FILE
-music_media_player=config_file[2].split('=')[1].split('\n')[0]
-grep_method=config_file[6].split('=')[1]
-
-global listed_music
-global music
-try: # Opening a cached file containing the last used music folder
-    with open('/tmp/music_location','r') as o:
-        music=o.read()
-        listed_music=listdir(music)
-except FileNotFoundError:
-    music=input("Enter the path of a music folder:\n")
-    listed_music=listdir(music)
-    open('/tmp/music_location','w').write(music)
+# The number of lines(songs) shown at one time on screen
+def_range = 10 
 
 def musics():
     global listed_music
     global music
-    try: # Opening a cached file containing the last used music folder
+    try:          
         with open('/tmp/music_location','r') as o:
-            music=o.read()
-            listed_music=listdir(music)
+            music = o.read()
+            listed_music = listdir(music)
     except FileNotFoundError:
-        music=input("Enter the path of a music folder:\n")
-        listed_music=listdir(music)
+        music = input("Enter the path of a music folder:\n")
+        listed_music = listdir(music)
         open('/tmp/music_location','w').write(music)
 
-global msc # Default global variable for listing the state of a running process
-global couterb
-counterb = -1
-msc=False
-global a
-a=1 # Prevents a slider from going backwards when scrolling
-auto=0 # Autoplay toggle
-autoplay='off' # Visual for autoplay
-def_range=10 # The number of lines(songs) shown at one time on screen
+    #Opening a cached file containing the last used music folder
+    try:        
+        with open('/tmp/music_location','r') as o:
+            music = o.read()
+            listed_music = listdir(music)
+    except FileNotFoundError:
+        music = input("Enter the path of a music folder:\n")
+        listed_music = listdir(music)
+        open('/tmp/music_location','w').write(music)
+musics()
 
-def banner(): # Main screen that shows the options
+
+def banner():
     print(f"\n\n[r] Select new music folder\n[a] Autoplay is {autoplay}\n[q] Quit\n[w] Scroll up\n[s] Scroll down\n[/] Search")
-    if msc==True:
-        print("[c] Stop playing\n[p] Pause playing")
-    else:
-        pass
 
-def display_music(a): # Loop that lists the songs from a folder
+def display_music(a):
     system('clear')
     try:
         for r in range(def_range):
@@ -81,8 +62,9 @@ def display_music(a): # Loop that lists the songs from a folder
         banner()
         pass
 
-def player(ask): # Function for a music player
-    # Checks if it's a directory
+# MUSIC PLAYER
+def player(ask):
+    # CHECKS THE PATH TO SEE IF IT'S NOT A FOLDER
     if path.isdir(music+"/"+listed_music[int(ask)]):
         global predir
         predir = open('/tmp/predir','a').writelines(music+"\n")
@@ -92,58 +74,33 @@ def player(ask): # Function for a music player
         global a
         display_music(a)
     else:
-        play=listed_music[int(ask)]
-        pl=f'"{play}"'
-        global P1
-        playsound_=system(f"{music_media_player} '{music}/{play}'")
-        P1=Process(target=playsound_)
-        def playmusic():
-            P1.start()
-            return P1
-        T1=Thread(target=playmusic)
-        system('clear')
-        if auto==1: # autoplay function # BROKEN
-            def loop():
-                while True:
-                    proc=playmusic()
-                    while True:
-                        if proc.is_alive:
-                            pass
-                        else:
-                            try:
-                                proc.terminate()
-                                break
-                            except:
-                                break
-                    ask=int(ask)+1
-                    play=listed_music[int(ask)-1]
-                    pl=f'"{play}"'
-            Thread(target=loop).start()
-        else:
-            playmusic()
-        a=1
+        system(f'{music_media_player} "{music}/{listed_music[int(ask)]}" 2>/dev/null')
 
-while True: # Main
+# MAIN
+while True:
         display_music(a)
         print("Select a song:\n")
-        ask=getch()
+        # GET USER INPUT
+        ask = getch()
         if ask.isnumeric():
-            ask=ask+input()
+            ask = ask+input()
         else:
             pass
-        if ask=='a': # Autoplay
-            if auto==0:
-                auto=1
-                autoplay='on'
-            elif auto==1:
-                auto=0
-                autoplay='off'
-        elif ask=='/': # Search function
+        # AUTOPLAY
+        if ask == 'a':             
+            if auto == 0:
+                auto = 1
+                autoplay = 'on'
+            elif auto == 1:
+                auto = 0
+                autoplay = 'off'
+        # SEARCH
+        elif ask == '/':             
             def search():
                 system('clear')
-                slash_ask=input("Enter a name of a song:\n")
+                slash_ask = input("Enter a name of a song:\n")
                 try:
-                    count=0
+                    count = 0
                     while True:
                         if str(slash_ask.lower()) in listed_music[count].lower():
                             print(f"[{count}]"+listed_music[count])
@@ -152,71 +109,61 @@ while True: # Main
                             count+=1
                 except:
                     print("\n[/] Search\n[q] Quit\nChoose song:\n")
-                    ask_mus=getch()
+                    ask_mus = getch()
                     if ask_mus.isnumeric():
-                        ask_mus=ask_mus+input()
+                        ask_mus = ask_mus+input()
                     else:
                         pass
-                    if ask_mus=='q':
+                    if ask_mus == 'q':
                         pass
-                    elif ask_mus=='/':
+                    elif ask_mus == '/':
                         search()
                     else:
-                        try:
-                            P1.terminate()
-                        except:
-                            pass
                         player(ask_mus)
             search()
-        elif ask=='s': # Scroll down
+        # SCROLLING DOWN
+        elif ask=='s': 
             if (a+10)<len(listed_music):
                 a+=10
                 display_music(a)
             else:
                 pass
-        elif ask=='w': # Scroll up
-            if (a-10)>=0:
+
+        # SCROLLING UP
+        elif ask=='w':
+            if (a-10) >= 0:
                 a-=10
                 display_music(a)
-            #elif display_music(a)<0:
-                #pass
-        elif ask=='q': # QUIT THE PROGRAM
+
+        # EXIT PROGRAM
+        elif ask=='q':
             exit()
-        elif ask=='r': # DELETE MUSIC FILE LOCATION
+
+        # DELETE PREVIOUS MUSIC FILE LOCATION
+        elif ask == 'r':
             try:
                 system('rm /tmp/music_location')
                 system('rm /tmp/predir')
                 system('clear')
             except:
                 pass
+            # CREATES NEW MUSIC FILE LOCATION
             musics()
             display_music(a)
-        elif ask=='b': # JESUS FIXED IT BUT JESUS CAN ONLY GO ONE STEP BACK
-            predir2 = open('/tmp/predir','r').readlines(counterb) # GOTTA GO TO THIS DIRECTORY
-            listed_music = listdir(str(predir2[-1].split('\n')[0]))
-            open('/tmp/music_location', 'w').write(str(predir2[counterb].split('\n')[0]))
-            counterb-=1
+
+        elif ask == 'b':
+            previous = open('/tmp/predir', 'r').readlines()
+            previous2 = previous[len(previous) - counter].split('\n')[0]
+            open('/tmp/music_location', 'w').write(previous2)
             musics()
             display_music(a)
-        elif ask=='c':
-            try:
-                msc=False
-                P1.terminate()
-            except:
-                pass
+            counter += 1
+
         elif ask!='a' or 'q' or 'w' or 's' or '/' or 'c':
             if ask.isnumeric():
-                try:
-                    P1.terminate()
-                except:
-                    pass
-                msc=True
                 player(ask)
             else:
                 pass
+
         else:
-            try:
-                P1.terminate()
-            except:
-                pass
             player(ask)
