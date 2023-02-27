@@ -72,9 +72,9 @@ def player(ask):
         global a
         display_music(a)
     else:
-        global th1
         def mdp():
             MediaPlayer(f"{music}/{listed_music[int(ask)]}")
+        global th1
         th1 = Process(target=mdp)
         th1.start()
 
