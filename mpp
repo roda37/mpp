@@ -2,10 +2,8 @@
 from os import listdir,system,path,getpid
 from getch import getch
 from time import sleep
+from ffpyplayer.player import MediaPlayer
 from multiprocessing import Process
-
-# MUSIC PLAYER TO PLAY AUDIO
-music_media_player = "ffplay -nodisp"
 
 # Prevents a slider from going backwards when scrolling
 global a
@@ -74,7 +72,11 @@ def player(ask):
         global a
         display_music(a)
     else:
-        system(f'{music_media_player} "{music}/{listed_music[int(ask)]}" 2>/dev/null')
+        global th1
+        def mdp():
+            MediaPlayer(f"{music}/{listed_music[int(ask)]}")
+        th1 = Process(target=mdp)
+        th1.start()
 
 # MAIN
 while True:
@@ -122,7 +124,7 @@ while True:
                         player(ask_mus)
             search()
         # SCROLLING DOWN
-        elif ask=='s': 
+        elif ask == 's': 
             if (a+10)<len(listed_music):
                 a+=10
                 display_music(a)
@@ -130,7 +132,7 @@ while True:
                 pass
 
         # SCROLLING UP
-        elif ask=='w':
+        elif ask == 'w':
             if (a-10) >= 0:
                 a-=10
                 display_music(a)
@@ -138,6 +140,10 @@ while True:
         # EXIT PROGRAM
         elif ask=='q':
             exit()
+
+        # STOP THREAD FROM RUNNING
+        elif ask == 'c':
+            th1.terminate()
 
         # DELETE PREVIOUS MUSIC FILE LOCATION
         elif ask == 'r':
