@@ -106,22 +106,25 @@ while True:
                     while True:
                         if str(slash_ask.lower()) in listed_music[count].lower():
                             print(f"[{count}]"+listed_music[count])
-                            count+=1
                         else:
-                            count+=1
+                            pass
+                        count+=1
                 except:
                     print("\n[/] Search\n[q] Quit\nChoose song:\n")
                     ask_mus = getch()
                     if ask_mus.isnumeric():
                         ask_mus = ask_mus+input()
+                        player(ask_mus)
                     else:
                         pass
+
                     if ask_mus == 'q':
                         pass
                     elif ask_mus == '/':
                         search()
                     else:
-                        player(ask_mus)
+                        pass
+
             search()
         # SCROLLING DOWN
         elif ask == 's': 
